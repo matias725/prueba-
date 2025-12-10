@@ -1,9 +1,121 @@
-<html>
-<head>
-    <title>Inicio - Monitoreo de Dispositivos</title>
-</head>
-<body>
-    <h1>Bienvenido al Sistema de Monitoreo de Dispositivos</h1>
-    <p>Seleccione una opción del menú para comenzar.</p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Panel principal{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        background: radial-gradient(circle at 20% 20%, #1f6f8b 0, rgba(31, 111, 139, 0.05) 30%),
+                    radial-gradient(circle at 80% 0%, #f0a202 0, rgba(240, 162, 2, 0.05) 28%),
+                    #0f172a;
+        font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+        color: #e2e8f0;
+        min-height: 100vh;
+    }
+    .hero {
+        background: linear-gradient(135deg, rgba(31, 111, 139, 0.25), rgba(240, 162, 2, 0.25));
+        border: 1px solid rgba(226, 232, 240, 0.1);
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+    .hero h1 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    .hero p {
+        color: #cbd5e1;
+        margin-bottom: 18px;
+    }
+    .btn-contrast {
+        background: #f0a202;
+        color: #0f172a;
+        border: none;
+        font-weight: 700;
+        padding: 12px 18px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(240, 162, 2, 0.35);
+    }
+    .btn-contrast:hover { background: #ffb627; color: #0f172a; }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+    }
+    .card-glass {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(226, 232, 240, 0.08);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        height: 100%;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .card-glass:hover { transform: translateY(-4px); border-color: rgba(240, 162, 2, 0.35); }
+    .card-icon {
+        width: 46px;
+        height: 46px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: rgba(226, 232, 240, 0.08);
+        color: #f0a202;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+    .text-dim { color: #cbd5e1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero mb-4">
+    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3">
+        <div>
+            <h1 class="mb-2">SmartConnect · Panel</h1>
+            <p class="mb-3">Controla dispositivos, zonas, mediciones y alertas en un solo lugar.</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-contrast" href="{% url 'dispositivos:dashboard' %}">
+                    <i class="fas fa-gauge-high me-2"></i>Ir al dashboard
+                </a>
+                <a class="btn btn-outline-light" href="{% url 'dispositivos:dispositivo_list' %}">
+                    <i class="fas fa-microchip me-2"></i>Dispositivos
+                </a>
+            </div>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-light text-dark px-3 py-2">Version 1.0</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card-glass">
+        <div class="card-icon"><i class="fas fa-sitemap"></i></div>
+        <h5 class="mb-2">Zonas</h5>
+        <p class="text-dim mb-3">Organiza las ubicaciones y agrupa tus dispositivos para un monitoreo claro.</p>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'dispositivos:zona_list' %}">Ver zonas</a>
+    </div>
+    <div class="card-glass">
+        <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+        <h5 class="mb-2">Mediciones</h5>
+        <p class="text-dim mb-3">Consulta tendencias y valores capturados por sensores en tiempo real.</p>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'dispositivos:medicion_list' %}">Ver mediciones</a>
+    </div>
+    <div class="card-glass">
+        <div class="card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h5 class="mb-2">Alertas</h5>
+        <p class="text-dim mb-3">Detecta incidencias y actúa rápido con las alertas generadas automáticamente.</p>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'dispositivos:alerta_list' %}">Ver alertas</a>
+    </div>
+    <div class="card-glass">
+        <div class="card-icon"><i class="fas fa-users"></i></div>
+        <h5 class="mb-2">Usuarios</h5>
+        <p class="text-dim mb-3">Gestiona perfiles y roles para mantener el acceso seguro y segmentado.</p>
+        <a class="btn btn-sm btn-outline-light" href="{% url 'usuarios:listar' %}">Ver usuarios</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+[Unit]
+Description=Django Monitoreo - SmartConnect Backend
+After=network.target
+
+[Service]
+Type=notify
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/prueba-/monitoreo
+Environment="PATH=/usr/bin"
+Environment="DJANGO_SETTINGS_MODULE=monitoreo.settings"
+
+ExecStart=/usr/bin/python3 -m gunicorn monitoreo.wsgi:application --workers 3 --bind 0.0.0.0:8000 --timeout 120 --log-level info --access-logfile /home/ec2-user/gunicorn-access.log --error-logfile /home/ec2-user/gunicorn-error.log
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
