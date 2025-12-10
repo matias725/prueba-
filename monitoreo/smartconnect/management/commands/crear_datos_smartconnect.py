@@ -34,34 +34,28 @@ class Command(BaseCommand):
             username='admin',
             defaults={'email': 'admin@smartconnect.com', 'first_name': 'Admin', 'last_name': 'System'}
         )
-        if not user_admin.smartconnect_profile:
-            UsuarioSmartConnect.objects.create(
-                user=user_admin,
-                rol=rol_admin,
-                departamento=dept_seguridad
-            )
+        UsuarioSmartConnect.objects.get_or_create(
+            user=user_admin,
+            defaults={'rol': rol_admin, 'departamento': dept_seguridad}
+        )
 
         user_operador, _ = User.objects.get_or_create(
             username='operador',
             defaults={'email': 'operador@smartconnect.com', 'first_name': 'Juan', 'last_name': 'Operador'}
         )
-        if not user_operador.smartconnect_profile:
-            UsuarioSmartConnect.objects.create(
-                user=user_operador,
-                rol=rol_operador,
-                departamento=dept_seguridad
-            )
+        UsuarioSmartConnect.objects.get_or_create(
+            user=user_operador,
+            defaults={'rol': rol_operador, 'departamento': dept_seguridad}
+        )
 
         user_empleado, _ = User.objects.get_or_create(
             username='empleado',
             defaults={'email': 'empleado@smartconnect.com', 'first_name': 'Carlos', 'last_name': 'Empleado'}
         )
-        if not user_empleado.smartconnect_profile:
-            UsuarioSmartConnect.objects.create(
-                user=user_empleado,
-                rol=rol_operador,
-                departamento=dept_ti
-            )
+        UsuarioSmartConnect.objects.get_or_create(
+            user=user_empleado,
+            defaults={'rol': rol_operador, 'departamento': dept_ti}
+        )
 
         # Establecer contraseñas
         if user_admin.check_password('admin123') == False:
