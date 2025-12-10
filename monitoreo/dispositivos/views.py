@@ -734,6 +734,22 @@ def controlar_barrera(request, barrera_id):
     return redirect('dispositivos:barrera_detail', barrera_id=barrera_id)
 
 
+@login_required
+def simulador_acceso(request):
+    """Simulador de acceso RFID"""
+    from smartconnect.models import Sensor, Barrera
+    
+    sensores = Sensor.objects.all().order_by('uid_mac')
+    barreras = Barrera.objects.filter(activo=True)
+    
+    context = {
+        'sensores': sensores,
+        'barreras': barreras,
+    }
+    
+    return render(request, 'dispositivos/simulador_acceso.html', context)
+
+
 def custom_404(request, exception):
     logger.warning(f'Página no encontrada: {request.path} por usuario {getattr(request.user, "id", "anónimo")}')
     return render(request, '404.html', status=404)

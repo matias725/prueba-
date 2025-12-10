@@ -39,4 +39,7 @@ urlpatterns = [
     path('barreras/', views.listar_barreras, name='barrera_list'),
     path('barreras/<int:barrera_id>/', views.detalle_barrera, name='barrera_detail'),
     path('barreras/<int:barrera_id>/controlar/', views.controlar_barrera, name='barrera_controlar'),
+    
+    # Simulador de Acceso RFID
+    path('simulador/', views.simulador_acceso, name='simulador_acceso'),
 ]

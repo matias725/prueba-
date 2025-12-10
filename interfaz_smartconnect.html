@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartConnect - Interfaz RFID</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .sensor-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .sensor-card:hover {
+            transform: translateY(-5px);
+        }
+        .badge-estado {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4">
+            <h1><i class="fas fa-shield-alt text-primary"></i> SmartConnect</h1>
+            <p class="text-muted">Sistema de Control de Acceso RFID</p>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sensores-tab" data-bs-toggle="tab" data-bs-target="#sensores" type="button">
+                    <i class="fas fa-id-card"></i> Sensores RFID
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="barreras-tab" data-bs-toggle="tab" data-bs-target="#barreras" type="button">
+                    <i class="fas fa-road-barrier"></i> Barreras
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Sensores RFID -->
+            <div class="tab-pane fade show active" id="sensores" role="tabpanel">
+                <div id="sensores-loading" class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p>Cargando sensores...</p>
+                </div>
+                <div id="sensores-content" style="display:none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Total de sensores: <span id="total-sensores" class="fw-bold">0</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th><i class="fas fa-hashtag"></i> ID</th>
+                                    <th><i class="fas fa-qrcode"></i> UID/MAC</th>
+                                    <th><i class="fas fa-comment"></i> Descripción</th>
+                                    <th><i class="fas fa-signal"></i> Estado</th>
+                                    <th><i class="fas fa-building"></i> Departamento</th>
+                                    <th><i class="fas fa-calendar"></i> Fecha Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sensores-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="sensores-error" class="alert alert-danger" style="display:none;">
+                    <i class="fas fa-exclamation-triangle"></i> Error al cargar sensores
+                </div>
+            </div>
+
+            <!-- Barreras -->
+            <div class="tab-pane fade" id="barreras" role="tabpanel">
+                <div id="barreras-loading" class="loading">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p>Cargando barreras...</p>
+                </div>
+                <div id="barreras-content" style="display:none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-info-circle"></i> Total de barreras: <span id="total-barreras" class="fw-bold">0</span>
+                    </div>
+                    <div class="row" id="barreras-cards">
+                    </div>
+                </div>
+                <div id="barreras-error" class="alert alert-danger" style="display:none;">
+                    <i class="fas fa-exclamation-triangle"></i> Error al cargar barreras
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = 'http://98.88.189.220/api/smartconnect';
+        let token = null;
+
+        // Login automático
+        async function login() {
+            try {
+                const response = await fetch(`${API_BASE}/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+                const data = await response.json();
+                token = data.access;
+                return true;
+            } catch (error) {
+                console.error('Error en login:', error);
+                return false;
+            }
+        }
+
+        // Cargar sensores
+        async function cargarSensores() {
+            try {
+                const response = await fetch(`${API_BASE}/sensores/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                
+                document.getElementById('sensores-loading').style.display = 'none';
+                document.getElementById('sensores-content').style.display = 'block';
+                document.getElementById('total-sensores').textContent = data.count;
+
+                const tbody = document.getElementById('sensores-tbody');
+                tbody.innerHTML = '';
+
+                data.results.forEach(sensor => {
+                    const estadoBadge = getEstadoBadge(sensor.estado);
+                    const fecha = new Date(sensor.fecha_creacion).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    tbody.innerHTML += `
+                        <tr class="sensor-card">
+                            <td>${sensor.id}</td>
+                            <td><code class="text-primary">${sensor.uid_mac}</code></td>
+                            <td>${sensor.descripcion || '-'}</td>
+                            <td>${estadoBadge}</td>
+                            <td>${sensor.departamento_nombre || '-'}</td>
+                            <td>${fecha}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error al cargar sensores:', error);
+                document.getElementById('sensores-loading').style.display = 'none';
+                document.getElementById('sensores-error').style.display = 'block';
+            }
+        }
+
+        // Cargar barreras
+        async function cargarBarreras() {
+            try {
+                const response = await fetch(`${API_BASE}/barreras/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                
+                document.getElementById('barreras-loading').style.display = 'none';
+                document.getElementById('barreras-content').style.display = 'block';
+                document.getElementById('total-barreras').textContent = data.count;
+
+                const container = document.getElementById('barreras-cards');
+                container.innerHTML = '';
+
+                data.results.forEach(barrera => {
+                    const estadoClass = barrera.estado === 'abierta' ? 'success' : 'secondary';
+                    const estadoIcon = barrera.estado === 'abierta' ? 'unlock' : 'lock';
+                    
+                    container.innerHTML += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card sensor-card border-${estadoClass}">
+                                <div class="card-header bg-${estadoClass} text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-${estadoIcon}"></i> ${barrera.nombre}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>${barrera.descripcion || 'Sin descripción'}</p>
+                                    <div class="mb-2">
+                                        <strong>Estado:</strong>
+                                        <span class="badge bg-${estadoClass} badge-estado">
+                                            <i class="fas fa-${estadoIcon}"></i> ${barrera.estado.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Departamento:</strong> ${barrera.departamento_nombre || '-'}
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Activa:</strong>
+                                        ${barrera.activo ? '<i class="fas fa-check-circle text-success"></i> Sí' : '<i class="fas fa-times-circle text-danger"></i> No'}
+                                    </div>
+                                    <small class="text-muted">
+                                        ID: ${barrera.id}
+                                    </small>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <button class="btn btn-sm btn-${estadoClass === 'success' ? 'warning' : 'success'} w-100" 
+                                            onclick="controlarBarrera(${barrera.id}, '${barrera.estado === 'abierta' ? 'cerrar' : 'abrir'}')">
+                                        <i class="fas fa-${estadoClass === 'success' ? 'lock' : 'unlock-alt'}"></i>
+                                        ${barrera.estado === 'abierta' ? 'Cerrar' : 'Abrir'} Barrera
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error al cargar barreras:', error);
+                document.getElementById('barreras-loading').style.display = 'none';
+                document.getElementById('barreras-error').style.display = 'block';
+            }
+        }
+
+        // Controlar barrera
+        async function controlarBarrera(id, accion) {
+            try {
+                const response = await fetch(`${API_BASE}/barreras/${id}/control/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ accion: accion })
+                });
+                
+                if (response.ok) {
+                    alert(`Barrera ${accion === 'abrir' ? 'abierta' : 'cerrada'} correctamente`);
+                    cargarBarreras(); // Recargar
+                } else {
+                    alert('Error al controlar la barrera');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al controlar la barrera');
+            }
+        }
+
+        // Helper para badges de estado
+        function getEstadoBadge(estado) {
+            const badges = {
+                'activo': '<span class="badge bg-success badge-estado">Activo</span>',
+                'inactivo': '<span class="badge bg-secondary badge-estado">Inactivo</span>',
+                'bloqueado': '<span class="badge bg-danger badge-estado">Bloqueado</span>',
+                'perdido': '<span class="badge bg-warning text-dark badge-estado">Perdido</span>'
+            };
+            return badges[estado] || '<span class="badge bg-secondary badge-estado">' + estado + '</span>';
+        }
+
+        // Inicializar
+        (async function init() {
+            const loggedIn = await login();
+            if (loggedIn) {
+                await cargarSensores();
+                await cargarBarreras();
+            } else {
+                alert('Error al conectar con el servidor');
+            }
+        })();
+
+        // Evento de cambio de tab
+        document.getElementById('barreras-tab').addEventListener('shown.bs.tab', function () {
+            cargarBarreras();
+        });
+    </script>
+</body>
+</html>

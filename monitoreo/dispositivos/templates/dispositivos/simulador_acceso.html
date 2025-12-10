@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Simulador de Acceso RFID - SmartConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .simulator-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .rfid-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 3px solid transparent;
+    }
+    
+    .rfid-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .rfid-card.selected {
+        border-color: #667eea;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .rfid-reader {
+        background: #2c3e50;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .reader-light {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: #95a5a6;
+        margin: 20px auto;
+        box-shadow: 0 0 30px rgba(149, 165, 166, 0.5);
+        transition: all 0.5s;
+    }
+    
+    .reader-light.scanning {
+        background: #f39c12;
+        animation: pulse 1s infinite;
+    }
+    
+    .reader-light.success {
+        background: #27ae60;
+        box-shadow: 0 0 50px rgba(39, 174, 96, 0.8);
+    }
+    
+    .reader-light.denied {
+        background: #e74c3c;
+        box-shadow: 0 0 50px rgba(231, 76, 60, 0.8);
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .result-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .result-box.show {
+        display: block;
+        animation: slideDown 0.5s;
+    }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .badge-estado {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-fingerprint me-2"></i>Simulador de Acceso RFID</h2>
+            <p class="text-muted">Prueba las tarjetas RFID y observa si el acceso es permitido o denegado</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Tarjetas RFID -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Tarjetas RFID Disponibles</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    {% for sensor in sensores %}
+                    <div class="rfid-card" data-uid="{{ sensor.uid_mac }}" data-estado="{{ sensor.estado }}" 
+                         data-descripcion="{{ sensor.descripcion }}" data-id="{{ sensor.id }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1"><code>{{ sensor.uid_mac }}</code></h6>
+                                <small class="text-muted">{{ sensor.descripcion|default:"Sin descripción" }}</small>
+                            </div>
+                            <div>
+                                {% if sensor.estado == 'activo' %}
+                                    <span class="badge bg-success badge-estado">Activo</span>
+                                {% elif sensor.estado == 'bloqueado' %}
+                                    <span class="badge bg-danger badge-estado">Bloqueado</span>
+                                {% elif sensor.estado == 'perdido' %}
+                                    <span class="badge bg-warning text-dark badge-estado">Perdido</span>
+                                {% else %}
+                                    <span class="badge bg-secondary badge-estado">Inactivo</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lector RFID -->
+        <div class="col-md-8">
+            <div class="simulator-container">
+                <h3 class="text-center mb-4">
+                    <i class="fas fa-door-open me-2"></i>Lector de Acceso RFID
+                </h3>
+                
+                <div class="rfid-reader">
+                    <div class="reader-light" id="readerLight"></div>
+                    <h4 id="readerStatus">Acerque una tarjeta al lector</h4>
+                    <p id="readerMessage" class="text-white-50">Seleccione una tarjeta de la lista</p>
+                </div>
+
+                <!-- Selector de Barrera -->
+                <div class="mt-4">
+                    <label class="form-label text-white">Barrera a controlar (opcional):</label>
+                    <select id="barreraSelect" class="form-select">
+                        <option value="">Sin barrera</option>
+                        {% for barrera in barreras %}
+                        <option value="{{ barrera.id }}">{{ barrera.nombre }} - {{ barrera.departamento.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Botón de Simulación -->
+                <div class="text-center mt-4">
+                    <button id="btnSimular" class="btn btn-light btn-lg" disabled>
+                        <i class="fas fa-play me-2"></i>Simular Acceso
+                    </button>
+                    <button id="btnReset" class="btn btn-outline-light btn-lg ms-2">
+                        <i class="fas fa-redo me-2"></i>Reiniciar
+                    </button>
+                </div>
+
+                <!-- Resultado -->
+                <div id="resultBox" class="result-box">
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+
+            <!-- Últimos Eventos -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Registro de Simulaciones</h5>
+                </div>
+                <div class="card-body" id="eventosLog" style="max-height: 300px; overflow-y: auto;">
+                    <p class="text-muted">No hay eventos aún. Realice una simulación.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedCard = null;
+let eventos = [];
+
+// Obtener token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Seleccionar tarjeta
+document.querySelectorAll('.rfid-card').forEach(card => {
+    card.addEventListener('click', function() {
+        // Remover selección anterior
+        document.querySelectorAll('.rfid-card').forEach(c => c.classList.remove('selected'));
+        
+        // Seleccionar nueva
+        this.classList.add('selected');
+        selectedCard = {
+            uid: this.dataset.uid,
+            estado: this.dataset.estado,
+            descripcion: this.dataset.descripcion,
+            id: this.dataset.id
+        };
+        
+        document.getElementById('btnSimular').disabled = false;
+        document.getElementById('readerStatus').textContent = 'Tarjeta seleccionada: ' + selectedCard.uid;
+        document.getElementById('readerMessage').textContent = selectedCard.descripcion;
+        document.getElementById('readerLight').className = 'reader-light';
+    });
+});
+
+// Simular acceso
+document.getElementById('btnSimular').addEventListener('click', async function() {
+    if (!selectedCard) return;
+    
+    const barreraId = document.getElementById('barreraSelect').value;
+    const light = document.getElementById('readerLight');
+    const status = document.getElementById('readerStatus');
+    const message = document.getElementById('readerMessage');
+    
+    // Estado de escaneo
+    light.className = 'reader-light scanning';
+    status.textContent = 'Escaneando...';
+    message.textContent = 'Verificando credenciales...';
+    
+    try {
+        // Primero obtener token de la API
+        const loginResponse = await fetch('/api/smartconnect/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: 'admin',
+                password: 'admin123'
+            })
+        });
+        
+        const loginData = await loginResponse.json();
+        const token = loginData.access;
+        
+        // Ahora simular el acceso
+        const response = await fetch('/api/smartconnect/sensores/simular_acceso/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                uid_mac: selectedCard.uid,
+                barrera_id: barreraId
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Mostrar resultado
+        setTimeout(() => {
+            if (data.acceso === 'permitido') {
+                light.className = 'reader-light success';
+                status.innerHTML = '<i class="fas fa-check-circle me-2"></i>ACCESO PERMITIDO';
+                message.textContent = data.motivo;
+                
+                document.getElementById('resultContent').innerHTML = `
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-check-circle me-2"></i>Acceso Permitido</h5>
+                        <p><strong>Tarjeta:</strong> ${selectedCard.uid}</p>
+                        <p><strong>Estado:</strong> ${data.sensor.estado}</p>
+                        <p><strong>Motivo:</strong> ${data.motivo}</p>
+                        ${data.barrera ? '<p><strong>Barrera abierta:</strong> ' + data.barrera.nombre + '</p>' : ''}
+                    </div>
+                `;
+            } else {
+                light.className = 'reader-light denied';
+                status.innerHTML = '<i class="fas fa-times-circle me-2"></i>ACCESO DENEGADO';
+                message.textContent = data.motivo;
+                
+                document.getElementById('resultContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-times-circle me-2"></i>Acceso Denegado</h5>
+                        <p><strong>Tarjeta:</strong> ${selectedCard.uid}</p>
+                        <p><strong>Motivo:</strong> ${data.motivo}</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('resultBox').classList.add('show');
+            
+            // Agregar al log
+            agregarEvento(data);
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        light.className = 'reader-light denied';
+        status.textContent = 'Error de conexión';
+        message.textContent = 'No se pudo conectar con el servidor';
+    }
+});
+
+// Reiniciar
+document.getElementById('btnReset').addEventListener('click', function() {
+    selectedCard = null;
+    document.querySelectorAll('.rfid-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('btnSimular').disabled = true;
+    document.getElementById('readerLight').className = 'reader-light';
+    document.getElementById('readerStatus').textContent = 'Acerque una tarjeta al lector';
+    document.getElementById('readerMessage').textContent = 'Seleccione una tarjeta de la lista';
+    document.getElementById('resultBox').classList.remove('show');
+});
+
+// Agregar evento al log
+function agregarEvento(data) {
+    const now = new Date().toLocaleString('es-ES');
+    const color = data.acceso === 'permitido' ? 'success' : 'danger';
+    const icon = data.acceso === 'permitido' ? 'check-circle' : 'times-circle';
+    
+    const eventoHTML = `
+        <div class="alert alert-${color} mb-2">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <i class="fas fa-${icon} me-2"></i>
+                    <strong>${data.acceso.toUpperCase()}</strong> - ${selectedCard.uid}
+                </div>
+                <small>${now}</small>
+            </div>
+            <small>${data.motivo}</small>
+        </div>
+    `;
+    
+    const logContainer = document.getElementById('eventosLog');
+    if (logContainer.querySelector('p.text-muted')) {
+        logContainer.innerHTML = '';
+    }
+    logContainer.insertAdjacentHTML('afterbegin', eventoHTML);
+}
+</script>
+{% endblock %}

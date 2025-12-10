@@ -152,6 +152,125 @@ class SensorViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def simular_acceso(self, request):
+        """Simula un intento de acceso con una tarjeta RFID."""
+        uid_mac = request.data.get('uid_mac')
+        barrera_id = request.data.get('barrera_id')
+        
+        if not uid_mac:
+            return Response(
+                {"error": "UID/MAC del sensor requerido", "acceso": "error"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            sensor = Sensor.objects.get(uid_mac=uid_mac)
+        except Sensor.DoesNotExist:
+            # Registrar evento de sensor no encontrado
+            Evento.objects.create(
+                tipo_evento='acceso_denegado',
+                descripcion=f'Sensor {uid_mac} no registrado en el sistema'
+            )
+            return Response(
+                {
+                    "acceso": "denegado",
+                    "motivo": "Sensor no registrado",
+                    "uid_mac": uid_mac,
+                    "color": "danger"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Validar estado del sensor
+        if sensor.estado == 'bloqueado':
+            Evento.objects.create(
+                tipo_evento='acceso_denegado',
+                sensor=sensor,
+                descripcion=f'Acceso denegado - Sensor bloqueado: {sensor.uid_mac}'
+            )
+            return Response(
+                {
+                    "acceso": "denegado",
+                    "motivo": "Sensor bloqueado por seguridad",
+                    "sensor": SensorSerializer(sensor).data,
+                    "color": "danger"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if sensor.estado == 'perdido':
+            Evento.objects.create(
+                tipo_evento='acceso_denegado',
+                sensor=sensor,
+                descripcion=f'Acceso denegado - Sensor reportado como perdido: {sensor.uid_mac}'
+            )
+            return Response(
+                {
+                    "acceso": "denegado",
+                    "motivo": "Sensor reportado como perdido",
+                    "sensor": SensorSerializer(sensor).data,
+                    "color": "warning"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if sensor.estado == 'inactivo' or not sensor.activo:
+            Evento.objects.create(
+                tipo_evento='acceso_denegado',
+                sensor=sensor,
+                descripcion=f'Acceso denegado - Sensor inactivo: {sensor.uid_mac}'
+            )
+            return Response(
+                {
+                    "acceso": "denegado",
+                    "motivo": "Sensor inactivo",
+                    "sensor": SensorSerializer(sensor).data,
+                    "color": "secondary"
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Acceso permitido
+        evento = Evento.objects.create(
+            tipo_evento='acceso_permitido',
+            sensor=sensor,
+            descripcion=f'Acceso permitido - Sensor: {sensor.uid_mac}, Usuario: {sensor.usuario.username if sensor.usuario else "N/A"}'
+        )
+        
+        # Abrir barrera si se especifica
+        barrera_info = None
+        if barrera_id:
+            try:
+                barrera = Barrera.objects.get(id=barrera_id)
+                barrera.estado = 'abierta'
+                barrera.save()
+                evento.barrera = barrera
+                evento.save()
+                barrera_info = BarreraSerializer(barrera).data
+                
+                # Crear evento de barrera abierta
+                Evento.objects.create(
+                    tipo_evento='barrera_abierta',
+                    sensor=sensor,
+                    barrera=barrera,
+                    descripcion=f'Barrera {barrera.nombre} abierta por sensor {sensor.uid_mac}'
+                )
+            except Barrera.DoesNotExist:
+                pass
+        
+        return Response(
+            {
+                "acceso": "permitido",
+                "motivo": "Sensor activo y autorizado",
+                "sensor": SensorSerializer(sensor).data,
+                "barrera": barrera_info,
+                "evento_id": evento.id,
+                "color": "success"
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class BarreraViewSet(viewsets.ModelViewSet):
