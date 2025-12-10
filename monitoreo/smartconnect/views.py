@@ -168,15 +168,11 @@ class SensorViewSet(viewsets.ModelViewSet):
         try:
             sensor = Sensor.objects.get(uid_mac=uid_mac)
         except Sensor.DoesNotExist:
-            # Registrar evento de sensor no encontrado
-            Evento.objects.create(
-                tipo_evento='acceso_denegado',
-                descripcion=f'Sensor {uid_mac} no registrado en el sistema'
-            )
+            # Sensor no encontrado
             return Response(
                 {
                     "acceso": "denegado",
-                    "motivo": "Sensor no registrado",
+                    "motivo": "Sensor no registrado en el sistema",
                     "uid_mac": uid_mac,
                     "color": "danger"
                 },
@@ -186,7 +182,7 @@ class SensorViewSet(viewsets.ModelViewSet):
         # Validar estado del sensor
         if sensor.estado == 'bloqueado':
             Evento.objects.create(
-                tipo_evento='acceso_denegado',
+                tipo='acceso_denegado',
                 sensor=sensor,
                 descripcion=f'Acceso denegado - Sensor bloqueado: {sensor.uid_mac}'
             )
@@ -202,7 +198,7 @@ class SensorViewSet(viewsets.ModelViewSet):
         
         if sensor.estado == 'perdido':
             Evento.objects.create(
-                tipo_evento='acceso_denegado',
+                tipo='acceso_denegado',
                 sensor=sensor,
                 descripcion=f'Acceso denegado - Sensor reportado como perdido: {sensor.uid_mac}'
             )
@@ -218,7 +214,7 @@ class SensorViewSet(viewsets.ModelViewSet):
         
         if sensor.estado == 'inactivo' or not sensor.activo:
             Evento.objects.create(
-                tipo_evento='acceso_denegado',
+                tipo='acceso_denegado',
                 sensor=sensor,
                 descripcion=f'Acceso denegado - Sensor inactivo: {sensor.uid_mac}'
             )
@@ -234,8 +230,10 @@ class SensorViewSet(viewsets.ModelViewSet):
         
         # Acceso permitido
         evento = Evento.objects.create(
-            tipo_evento='acceso_permitido',
+            tipo='acceso_permitido',
             sensor=sensor,
+            departamento=sensor.departamento,
+            usuario=sensor.usuario,
             descripcion=f'Acceso permitido - Sensor: {sensor.uid_mac}, Usuario: {sensor.usuario.username if sensor.usuario else "N/A"}'
         )
         
@@ -252,7 +250,7 @@ class SensorViewSet(viewsets.ModelViewSet):
                 
                 # Crear evento de barrera abierta
                 Evento.objects.create(
-                    tipo_evento='barrera_abierta',
+                    tipo='evento_manual',
                     sensor=sensor,
                     barrera=barrera,
                     descripcion=f'Barrera {barrera.nombre} abierta por sensor {sensor.uid_mac}'
