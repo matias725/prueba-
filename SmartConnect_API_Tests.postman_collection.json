@@ -1,0 +1,286 @@
+{
+  "info": {
+    "name": "SmartConnect API Tests",
+    "description": "Colección de pruebas para SmartConnect - Sistema de Control de Acceso RFID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Info API",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/info/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "info", ""]
+        }
+      }
+    },
+    {
+      "name": "2. Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"admin\", \"password\": \"admin123\"}"
+        },
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/login/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "login", ""]
+        }
+      }
+    },
+    {
+      "name": "3. Login Operador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"operador\", \"password\": \"operador123\"}"
+        },
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/login/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "login", ""]
+        }
+      }
+    },
+    {
+      "name": "4. Listar Usuarios",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/usuarios/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "usuarios", ""]
+        }
+      }
+    },
+    {
+      "name": "5. Listar Roles",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/roles/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "roles", ""]
+        }
+      }
+    },
+    {
+      "name": "6. Listar Departamentos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/departamentos/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "departamentos", ""]
+        }
+      }
+    },
+    {
+      "name": "7. Listar Sensores RFID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/sensores/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "sensores", ""]
+        }
+      }
+    },
+    {
+      "name": "8. Listar Barreras",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/barreras/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "barreras", ""]
+        }
+      }
+    },
+    {
+      "name": "9. Listar Eventos de Acceso",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/eventos/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "eventos", ""]
+        }
+      }
+    },
+    {
+      "name": "10. Control Manual Barrera - Abrir",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"accion\": \"abrir\"}"
+        },
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/barreras/1/control/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "barreras", "1", "control", ""]
+        }
+      }
+    },
+    {
+      "name": "11. Control Manual Barrera - Cerrar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"accion\": \"cerrar\"}"
+        },
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/barreras/1/control/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "barreras", "1", "control", ""]
+        }
+      }
+    },
+    {
+      "name": "12. Detalle Usuario",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/usuarios/1/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "usuarios", "1", ""]
+        }
+      }
+    },
+    {
+      "name": "13. Detalle Sensor",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/sensores/1/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "sensores", "1", ""]
+        }
+      }
+    },
+    {
+      "name": "14. Detalle Evento",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://98.88.189.220/api/smartconnect/eventos/1/",
+          "protocol": "http",
+          "host": ["98", "88", "189", "220"],
+          "path": ["api", "smartconnect", "eventos", "1", ""]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
