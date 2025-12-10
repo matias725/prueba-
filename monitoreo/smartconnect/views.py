@@ -15,27 +15,33 @@ from .serializers import (DepartamentoSerializer, RolSerializer, UserSerializer,
 class IsAdmin(permissions.BasePermission):
     """Permiso personalizado para admin."""
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+        if not user or not user.is_authenticated:
             return False
-        try:
-            profile = request.user.smartconnect_profile
-            return profile.rol.nombre == 'admin'
-        except:
+        # Permitir superusuarios o staff sin depender del perfil
+        if user.is_superuser or user.is_staff:
+            return True
+        profile = getattr(user, 'smartconnect_profile', None)
+        if not profile or not profile.rol:
             return False
+        return profile.rol.nombre == 'admin'
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Admin puede modificar, operador solo lectura."""
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+        if not user or not user.is_authenticated:
             return False
-        try:
-            profile = request.user.smartconnect_profile
-            if request.method in permissions.SAFE_METHODS:
-                return True
-            return profile.rol.nombre == 'admin'
-        except:
+        # Lectura permitida a cualquier usuario autenticado
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if user.is_superuser or user.is_staff:
+            return True
+        profile = getattr(user, 'smartconnect_profile', None)
+        if not profile or not profile.rol:
             return False
+        return profile.rol.nombre == 'admin'
 
 
 class InfoAPIView(APIView):
@@ -159,7 +165,7 @@ class BarreraViewSet(viewsets.ModelViewSet):
     def cambiar_estado(self, request, pk=None):
         """Cambia el estado de la barrera (abrir/cerrar)."""
         barrera = self.get_object()
-        nuevo_estado = request.data.get('estado')
+        nuevo_estado = request.data.get('estado') or request.data.get('nuevo_estado')
         
         if nuevo_estado not in ['abierta', 'cerrada']:
             return Response(
