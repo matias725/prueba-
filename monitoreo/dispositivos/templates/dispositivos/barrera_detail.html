@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Barrera {{ barrera.nombre }} - SmartConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{% url 'dispositivos:barrera_list' %}" class="btn btn-secondary mb-3">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </a>
+            <h2><i class="fas fa-road-barrier me-2"></i>Detalle de la Barrera</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información de la Barrera -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header {% if barrera.estado == 'abierta' %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                    <i class="fas fa-info-circle me-2"></i>Información General
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Nombre:</th>
+                            <td class="fs-5">{{ barrera.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Descripción:</th>
+                            <td>{{ barrera.descripcion|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Estado Actual:</th>
+                            <td>
+                                {% if barrera.estado == 'abierta' %}
+                                    <span class="badge bg-success fs-5">
+                                        <i class="fas fa-unlock"></i> ABIERTA
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-5">
+                                        <i class="fas fa-lock"></i> CERRADA
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Departamento:</th>
+                            <td>{{ barrera.departamento.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Activa:</th>
+                            <td>
+                                {% if barrera.activo %}
+                                    <i class="fas fa-check-circle text-success"></i> Sí
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger"></i> No
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Fecha Creación:</th>
+                            <td>{{ barrera.fecha_creacion|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Última Actualización:</th>
+                            <td>{{ barrera.fecha_actualizacion|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                    </table>
+
+                    <hr>
+
+                    <!-- Controles -->
+                    <div class="d-grid gap-2">
+                        {% if barrera.estado == 'cerrada' %}
+                        <form method="post" action="{% url 'dispositivos:barrera_controlar' barrera.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="accion" value="abrir">
+                            <button type="submit" class="btn btn-success btn-lg w-100" onclick="return confirm('¿Abrir la barrera {{ barrera.nombre }}?')">
+                                <i class="fas fa-unlock-alt me-2"></i>Abrir Barrera
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'dispositivos:barrera_controlar' barrera.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="accion" value="cerrar">
+                            <button type="submit" class="btn btn-warning btn-lg w-100" onclick="return confirm('¿Cerrar la barrera {{ barrera.nombre }}?')">
+                                <i class="fas fa-lock me-2"></i>Cerrar Barrera
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos Recientes -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-history me-2"></i>Eventos Recientes (últimos 20)
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                    {% if eventos %}
+                        <div class="list-group">
+                            {% for evento in eventos %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        {% if evento.tipo_evento == 'acceso_permitido' %}
+                                            <i class="fas fa-check-circle text-success"></i> Acceso Permitido
+                                        {% elif evento.tipo_evento == 'acceso_denegado' %}
+                                            <i class="fas fa-times-circle text-danger"></i> Acceso Denegado
+                                        {% elif evento.tipo_evento == 'barrera_abierta' %}
+                                            <i class="fas fa-door-open text-primary"></i> Barrera Abierta
+                                        {% elif evento.tipo_evento == 'barrera_cerrada' %}
+                                            <i class="fas fa-door-closed text-secondary"></i> Barrera Cerrada
+                                        {% else %}
+                                            <i class="fas fa-circle"></i> {{ evento.get_tipo_evento_display }}
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">{{ evento.fecha_hora|date:"d/m/Y H:i:s" }}</small>
+                                </div>
+                                {% if evento.sensor %}
+                                    <p class="mb-1">
+                                        <strong>Sensor:</strong> <code>{{ evento.sensor.uid_mac }}</code>
+                                    </p>
+                                {% endif %}
+                                {% if evento.descripcion %}
+                                    <small class="text-muted">{{ evento.descripcion }}</small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>No hay eventos registrados para esta barrera
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

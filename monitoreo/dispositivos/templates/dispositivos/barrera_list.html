@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Barreras de Acceso - SmartConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-road-barrier me-2"></i>Barreras de Acceso</h2>
+            <p class="text-muted">Control de barreras del sistema SmartConnect</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="abierta" {% if estado_seleccionado == 'abierta' %}selected{% endif %}>Abierta</option>
+                        <option value="cerrada" {% if estado_seleccionado == 'cerrada' %}selected{% endif %}>Cerrada</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'dispositivos:barrera_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de barreras -->
+    <div class="row">
+        {% if barreras %}
+            {% for barrera in barreras %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 {% if barrera.estado == 'abierta' %}border-success{% else %}border-secondary{% endif %}">
+                    <div class="card-header {% if barrera.estado == 'abierta' %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                        <h5 class="mb-0">
+                            <i class="fas {% if barrera.estado == 'abierta' %}fa-door-open{% else %}fa-door-closed{% endif %} me-2"></i>
+                            {{ barrera.nombre }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ barrera.descripcion|default:"Sin descripción" }}</p>
+                        
+                        <div class="mb-3">
+                            <strong>Estado:</strong>
+                            {% if barrera.estado == 'abierta' %}
+                                <span class="badge bg-success fs-6">
+                                    <i class="fas fa-unlock"></i> ABIERTA
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">
+                                    <i class="fas fa-lock"></i> CERRADA
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Departamento:</strong> {{ barrera.departamento.nombre }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Activa:</strong>
+                            {% if barrera.activo %}
+                                <i class="fas fa-check-circle text-success"></i> Sí
+                            {% else %}
+                                <i class="fas fa-times-circle text-danger"></i> No
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                Creada: {{ barrera.fecha_creacion|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'dispositivos:barrera_detail' barrera.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye me-1"></i>Ver Detalles
+                            </a>
+                            
+                            {% if barrera.estado == 'cerrada' %}
+                            <form method="post" action="{% url 'dispositivos:barrera_controlar' barrera.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="abrir">
+                                <button type="submit" class="btn btn-success btn-sm w-100" onclick="return confirm('¿Abrir la barrera {{ barrera.nombre }}?')">
+                                    <i class="fas fa-unlock-alt me-1"></i>Abrir Barrera
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'dispositivos:barrera_controlar' barrera.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="cerrar">
+                                <button type="submit" class="btn btn-warning btn-sm w-100" onclick="return confirm('¿Cerrar la barrera {{ barrera.nombre }}?')">
+                                    <i class="fas fa-lock me-1"></i>Cerrar Barrera
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No hay barreras registradas
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

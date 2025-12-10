@@ -621,6 +621,119 @@ def listar_alertas(request):
     
     return render(request, 'dispositivos/alertas_list.html', context)
 
+# ==================== SENSORES RFID ====================
+
+@login_required
+def listar_sensores(request):
+    """Lista todos los sensores RFID del sistema SmartConnect"""
+    from smartconnect.models import Sensor
+    
+    sensores = Sensor.objects.select_related('departamento', 'usuario').all()
+    
+    # Filtros
+    estado = request.GET.get('estado', '')
+    departamento_id = request.GET.get('departamento', '')
+    
+    if estado:
+        sensores = sensores.filter(estado=estado)
+    if departamento_id:
+        sensores = sensores.filter(departamento_id=departamento_id)
+    
+    context = {
+        'sensores': sensores,
+        'estado_seleccionado': estado,
+        'departamento_seleccionado': departamento_id,
+    }
+    
+    return render(request, 'dispositivos/sensor_list.html', context)
+
+
+@login_required
+def detalle_sensor(request, sensor_id):
+    """Muestra el detalle de un sensor RFID"""
+    from smartconnect.models import Sensor, Evento
+    
+    sensor = get_object_or_404(Sensor.objects.select_related('departamento', 'usuario'), id=sensor_id)
+    
+    # Obtener últimos eventos del sensor
+    eventos = Evento.objects.filter(sensor=sensor).select_related('barrera').order_by('-fecha_hora')[:20]
+    
+    context = {
+        'sensor': sensor,
+        'eventos': eventos,
+    }
+    
+    return render(request, 'dispositivos/sensor_detail.html', context)
+
+
+# ==================== BARRERAS ====================
+
+@login_required
+def listar_barreras(request):
+    """Lista todas las barreras del sistema SmartConnect"""
+    from smartconnect.models import Barrera
+    
+    barreras = Barrera.objects.select_related('departamento').all()
+    
+    # Filtros
+    estado = request.GET.get('estado', '')
+    departamento_id = request.GET.get('departamento', '')
+    
+    if estado:
+        barreras = barreras.filter(estado=estado)
+    if departamento_id:
+        barreras = barreras.filter(departamento_id=departamento_id)
+    
+    context = {
+        'barreras': barreras,
+        'estado_seleccionado': estado,
+        'departamento_seleccionado': departamento_id,
+    }
+    
+    return render(request, 'dispositivos/barrera_list.html', context)
+
+
+@login_required
+def detalle_barrera(request, barrera_id):
+    """Muestra el detalle de una barrera"""
+    from smartconnect.models import Barrera, Evento
+    
+    barrera = get_object_or_404(Barrera.objects.select_related('departamento'), id=barrera_id)
+    
+    # Obtener últimos eventos de la barrera
+    eventos = Evento.objects.filter(barrera=barrera).select_related('sensor').order_by('-fecha_hora')[:20]
+    
+    context = {
+        'barrera': barrera,
+        'eventos': eventos,
+    }
+    
+    return render(request, 'dispositivos/barrera_detail.html', context)
+
+
+@login_required
+@require_POST
+def controlar_barrera(request, barrera_id):
+    """Controla el estado de una barrera (abrir/cerrar)"""
+    from smartconnect.models import Barrera
+    
+    barrera = get_object_or_404(Barrera, id=barrera_id)
+    accion = request.POST.get('accion', '')
+    
+    if accion == 'abrir':
+        barrera.estado = 'abierta'
+        barrera.save()
+        messages.success(request, f'Barrera {barrera.nombre} abierta correctamente')
+    elif accion == 'cerrar':
+        barrera.estado = 'cerrada'
+        barrera.save()
+        messages.success(request, f'Barrera {barrera.nombre} cerrada correctamente')
+    else:
+        messages.error(request, 'Acción no válida')
+    
+    return redirect('dispositivos:barrera_detail', barrera_id=barrera_id)
+
+
 def custom_404(request, exception):
     logger.warning(f'Página no encontrada: {request.path} por usuario {getattr(request.user, "id", "anónimo")}')
     return render(request, '404.html', status=404)

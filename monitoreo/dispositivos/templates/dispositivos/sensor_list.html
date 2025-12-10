@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sensores RFID - SmartConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-id-card me-2"></i>Sensores RFID</h2>
+            <p class="text-muted">Gestión de tarjetas y llaveros del sistema SmartConnect</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" {% if estado_seleccionado == 'activo' %}selected{% endif %}>Activo</option>
+                        <option value="inactivo" {% if estado_seleccionado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                        <option value="bloqueado" {% if estado_seleccionado == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
+                        <option value="perdido" {% if estado_seleccionado == 'perdido' %}selected{% endif %}>Perdido</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i>Filtrar
+                    </button>
+                    <a href="{% url 'dispositivos:sensor_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de sensores -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-list me-2"></i>Sensores Registrados ({{ sensores.count }})
+        </div>
+        <div class="card-body">
+            {% if sensores %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>UID/MAC</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Usuario</th>
+                            <th>Departamento</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sensor in sensores %}
+                        <tr>
+                            <td><code>{{ sensor.uid_mac }}</code></td>
+                            <td>{{ sensor.descripcion|default:"-" }}</td>
+                            <td>
+                                {% if sensor.estado == 'activo' %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% elif sensor.estado == 'inactivo' %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% elif sensor.estado == 'bloqueado' %}
+                                    <span class="badge bg-danger">Bloqueado</span>
+                                {% elif sensor.estado == 'perdido' %}
+                                    <span class="badge bg-warning text-dark">Perdido</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ sensor.usuario.get_full_name|default:"-" }}</td>
+                            <td>{{ sensor.departamento.nombre|default:"-" }}</td>
+                            <td>{{ sensor.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'dispositivos:sensor_detail' sensor.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No hay sensores registrados
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

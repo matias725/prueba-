@@ -30,4 +30,13 @@ urlpatterns = [
     
     # Alertas
     path('alertas/', views.listar_alertas, name='alerta_list'),
+    
+    # Sensores RFID
+    path('sensores/', views.listar_sensores, name='sensor_list'),
+    path('sensores/<int:sensor_id>/', views.detalle_sensor, name='sensor_detail'),
+    
+    # Barreras
+    path('barreras/', views.listar_barreras, name='barrera_list'),
+    path('barreras/<int:barrera_id>/', views.detalle_barrera, name='barrera_detail'),
+    path('barreras/<int:barrera_id>/controlar/', views.controlar_barrera, name='barrera_controlar'),
 ]
