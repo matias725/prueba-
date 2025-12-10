@@ -2,90 +2,158 @@
 
 {% block title %}Dashboard - Sistema de Monitoreo{% endblock %}
 
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body {
+        background: radial-gradient(circle at 20% 20%, #1f6f8b 0, rgba(31, 111, 139, 0.05) 30%),
+                    radial-gradient(circle at 80% 0%, #f0a202 0, rgba(240, 162, 2, 0.05) 28%),
+                    #0f172a;
+        font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+        color: #e2e8f0;
+        min-height: 100vh;
+    }
+    .header-section {
+        margin-bottom: 28px;
+    }
+    .header-section h1 {
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #fff;
+    }
+    .stat-card {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(226, 232, 240, 0.08);
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+        transition: transform 0.15s ease, border-color 0.15s ease;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(240, 162, 2, 0.35);
+    }
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: rgba(240, 162, 2, 0.15);
+        color: #f0a202;
+        font-size: 1.4rem;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+    }
+    .stat-label {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+    }
+    .card-glass {
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(226, 232, 240, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    }
+    .card-glass .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.08);
+        color: #fff;
+    }
+    .card-glass .card-body {
+        color: #e2e8f0;
+    }
+    .table-glass {
+        color: #e2e8f0;
+        background: transparent;
+    }
+    .table-glass thead {
+        border-top: 1px solid rgba(226, 232, 240, 0.1);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.1);
+        color: #cbd5e1;
+    }
+    .table-glass tbody tr {
+        border-bottom: 1px solid rgba(226, 232, 240, 0.05);
+    }
+    .badge-glass {
+        background: rgba(226, 232, 240, 0.15);
+        color: #cbd5e1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard EcoEnergy</h1>
-        <p class="text-muted">Bienvenido, {{ user.get_full_name|default:user.username }}</p>
-    </div>
+<div class="header-section">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>Dashboard SmartConnect</h1>
+    <p style="color: #cbd5e1;">Bienvenido, <strong>{{ user.get_full_name|default:user.username }}</strong></p>
 </div>
 
 <!-- Estadísticas -->
-<div class="row mb-4">
+<div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ zonas.count }}</h4>
-                        <p class="mb-0">Zonas</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-map-marker-alt fa-2x"></i>
-                    </div>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ zonas.count }}</div>
+                    <div class="stat-label">Zonas</div>
                 </div>
+                <div class="stat-icon"><i class="fas fa-sitemap"></i></div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ mediciones.count }}</h4>
-                        <p class="mb-0">Mediciones</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-chart-line fa-2x"></i>
-                    </div>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ mediciones.count }}</div>
+                    <div class="stat-label">Mediciones</div>
                 </div>
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ alertas_alta.count|add:alertas_grave.count }}</h4>
-                        <p class="mb-0">Alertas Críticas</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                    </div>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ alertas_alta.count|add:alertas_grave.count }}</div>
+                    <div class="stat-label">Alertas Críticas</div>
                 </div>
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h4>{{ alertas_media.count }}</h4>
-                        <p class="mb-0">Alertas Medias</p>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-info-circle fa-2x"></i>
-                    </div>
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ alertas_media.count }}</div>
+                    <div class="stat-label">Alertas Medias</div>
                 </div>
+                <div class="stat-icon"><i class="fas fa-bell"></i></div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row">
+<div class="row g-3">
     <!-- Mediciones Recientes -->
-    <div class="col-md-8">
-        <div class="card">
+    <div class="col-lg-8">
+        <div class="card-glass">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Mediciones Recientes</h5>
-                <a href="{% url 'dispositivos:medicion_list' %}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                <a href="{% url 'dispositivos:medicion_list' %}" class="btn btn-sm btn-outline-light">Ver todas</a>
             </div>
             <div class="card-body">
                 {% if mediciones %}
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm table-glass">
                         <thead>
                             <tr>
                                 <th>Dispositivo</th>
@@ -102,13 +170,13 @@
                                 <td>{{ medicion.fecha|date:"d/m/Y H:i" }}</td>
                                 <td>
                                     {% if medicion.consumo >= 100 %}
-                                    <span class="badge bg-danger">Crítico</span>
+                                    <span class="badge badge-glass" style="background-color: rgba(239, 68, 68, 0.25); color: #fca5a5;">Crítico</span>
                                     {% elif medicion.consumo > 80 %}
-                                    <span class="badge bg-warning">Alto</span>
+                                    <span class="badge badge-glass" style="background-color: rgba(240, 162, 2, 0.25); color: #fcd34d;">Alto</span>
                                     {% elif medicion.consumo > 60 %}
-                                    <span class="badge bg-info">Medio</span>
+                                    <span class="badge badge-glass" style="background-color: rgba(31, 111, 139, 0.25); color: #7dd3fc;">Medio</span>
                                     {% else %}
-                                    <span class="badge bg-success">Normal</span>
+                                    <span class="badge badge-glass" style="background-color: rgba(34, 197, 94, 0.25); color: #86efac;">Normal</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -124,21 +192,21 @@
     </div>
 
     <!-- Zonas -->
-    <div class="col-md-4">
-        <div class="card">
+    <div class="col-lg-4">
+        <div class="card-glass">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Zonas</h5>
-                <a href="{% url 'dispositivos:zona_list' %}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+                <h5 class="mb-0"><i class="fas fa-sitemap me-2"></i>Zonas</h5>
+                <a href="{% url 'dispositivos:zona_list' %}" class="btn btn-sm btn-outline-light">Ver todas</a>
             </div>
             <div class="card-body">
                 {% if zonas %}
                 {% for zona in zonas %}
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom: 1px solid rgba(226, 232, 240, 0.05);">
                     <div>
                         <strong>{{ zona.nombre }}</strong>
-                        <small class="text-muted d-block">{{ zona.num_dispositivos }} dispositivo{{ zona.num_dispositivos|pluralize }}</small>
+                        <small style="color: #94a3b8;">{{ zona.num_dispositivos }} dispositivo{{ zona.num_dispositivos|pluralize }}</small>
                     </div>
-                    <span class="badge bg-secondary">{{ zona.num_dispositivos }}</span>
+                    <span class="badge badge-glass">{{ zona.num_dispositivos }}</span>
                 </div>
                 {% endfor %}
                 {% else %}
@@ -153,27 +221,27 @@
 {% if alertas_grave or alertas_alta or alertas_media %}
 <div class="row mt-4">
     <div class="col-12">
-        <div class="card">
+        <div class="card-glass">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Alertas del Sistema</h5>
+                <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Alertas del Sistema</h5>
             </div>
             <div class="card-body">
                 {% if alertas_grave %}
-                <h6 class="text-danger">Alertas Críticas</h6>
+                <h6 style="color: #fca5a5; margin-bottom: 12px;">🔴 Alertas Críticas</h6>
                 {% for alerta in alertas_grave %}
-                <div class="alert alert-danger alert-dismissible fade show">
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 12px; margin-bottom: 8px; border-radius: 6px; color: #e2e8f0;">
                     <strong>{{ alerta.dispositivo.nombre }}:</strong> Consumo crítico de {{ alerta.consumo }} kWh
-                    <small class="d-block">{{ alerta.fecha|date:"d/m/Y H:i" }}</small>
+                    <small style="color: #94a3b8; display: block;">{{ alerta.fecha|date:"d/m/Y H:i" }}</small>
                 </div>
                 {% endfor %}
                 {% endif %}
 
                 {% if alertas_alta %}
-                <h6 class="text-warning">Alertas Altas</h6>
+                <h6 style="color: #fcd34d; margin-bottom: 12px; margin-top: 12px;">🟠 Alertas Altas</h6>
                 {% for alerta in alertas_alta %}
-                <div class="alert alert-warning alert-dismissible fade show">
+                <div style="background: rgba(240, 162, 2, 0.1); border-left: 3px solid #f0a202; padding: 12px; margin-bottom: 8px; border-radius: 6px; color: #e2e8f0;">
                     <strong>{{ alerta.dispositivo.nombre }}:</strong> Consumo alto de {{ alerta.consumo }} kWh
-                    <small class="d-block">{{ alerta.fecha|date:"d/m/Y H:i" }}</small>
+                    <small style="color: #94a3b8; display: block;">{{ alerta.fecha|date:"d/m/Y H:i" }}</small>
                 </div>
                 {% endfor %}
                 {% endif %}
