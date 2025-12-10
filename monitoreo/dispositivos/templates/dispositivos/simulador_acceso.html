@@ -255,28 +255,14 @@ document.getElementById('btnSimular').addEventListener('click', async function()
     message.textContent = 'Verificando credenciales...';
     
     try {
-        // Primero obtener token de la API
-        const loginResponse = await fetch('/api/smartconnect/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: 'admin',
-                password: 'admin123'
-            })
-        });
-        
-        const loginData = await loginResponse.json();
-        const token = loginData.access;
-        
-        // Ahora simular el acceso
+        // Usar sesión actual (el usuario ya está autenticado en Django)
         const response = await fetch('/api/smartconnect/sensores/simular_acceso/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+                'X-CSRFToken': csrftoken
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 uid_mac: selectedCard.uid,
                 barrera_id: barreraId
