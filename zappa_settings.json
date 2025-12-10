@@ -1,0 +1,48 @@
+{
+  "dev": {
+    "django_settings_module": "monitoreo.settings",
+    "aws_region": "us-east-1",
+    "project_name": "ecoenergy-api",
+    "runtime": "python3.12",
+    "s3_bucket": "ecoenergy-zappa-deployments",
+    "aws_environment_variables": {
+      "DJANGO_SETTINGS_MODULE": "monitoreo.settings",
+      "DJANGO_DEBUG": "False"
+    },
+    "slim_handler": true,
+    "exclude": [
+      "*.pyc",
+      "*.py.bak",
+      ".git",
+      ".gitignore",
+      ".pytest_cache"
+    ],
+    "environment_variables": {
+      "DJANGO_DEBUG": "False"
+    }
+  },
+  "production": {
+    "django_settings_module": "monitoreo.settings",
+    "aws_region": "us-east-1",
+    "project_name": "ecoenergy-api-prod",
+    "runtime": "python3.12",
+    "s3_bucket": "ecoenergy-zappa-deployments-prod",
+    "certificate_arn": "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID",
+    "domain": "api.ecoenergy.com",
+    "aws_environment_variables": {
+      "DJANGO_SETTINGS_MODULE": "monitoreo.settings",
+      "DJANGO_DEBUG": "False",
+      "SECURE_SSL_REDIRECT": "True"
+    },
+    "slim_handler": true,
+    "exclude": [
+      "*.pyc",
+      "*.py.bak",
+      ".git",
+      ".gitignore",
+      ".pytest_cache"
+    ],
+    "memory_size": 512,
+    "timeout": 60
+  }
+}
